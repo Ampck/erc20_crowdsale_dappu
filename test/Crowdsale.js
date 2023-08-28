@@ -45,7 +45,7 @@ describe('Crowdsale', () => {
 			amount = tokens(10);
 		describe('Success', () => {
 			beforeEach(async () => {
-				tx = await crowdsale.connect(user1).buyTokens(amount, {value: ether(10)})
+				tx = await user1.sendTransaction({ to: crowdsale.address, value: amount })
 				result = await tx.wait()
 			})
 			it('transfers tokens', async () => {
@@ -65,6 +65,52 @@ describe('Crowdsale', () => {
 		describe('Failure', () => {
 			it('rejects insufficient ETH', async () => {
 				await expect(crowdsale.connect(user1).buyTokens(amount, {value:0})).to.be.reverted
+			})
+		})
+	})
+	describe('Updating Price', () => {
+		let tx,
+			result,
+			price = ether(2)
+		describe('Success', () => {
+			beforeEach(async () => {
+				tx = await crowdsale.connect(deployer).setPrice(price);
+				result = await tx.wait();
+			})
+			it('updates the price', async() => {
+				expect(await crowdsale.price()).to.equal(price)
+			})
+		})
+		describe('Failure', () => {
+			it('prevents non-owner from updating price', async () => {
+				await expect(crowdsale.connect(user1).setPrice(price)).to.be.reverted
+			})
+		})
+	})
+	describe('Finalizing Sale', () => {
+		let tx,
+			result,
+			amount = tokens(10),
+			value = tokens(10)
+		describe('Success', () => {
+			beforeEach(async () => {
+				tx = await crowdsale.connect(user1).buyTokens(amount, { value: value})
+				result = await tx.wait()
+				tx = await crowdsale.connect(deployer).finalize()
+				result = await tx.wait()
+			})
+			it('transfers remaining tokens to owner', async () => {
+				expect(await token.balanceOf(crowdsale.address)).to.equal(0)
+				expect(await token.balanceOf(deployer.address)).to.equal(tokens(999990))
+			})
+			it('transfers ETH to owner', async () => {
+				contractBalance = await ethers.provider.getBalance(crowdsale.address)
+				expect(contractBalance).to.equal(0)
+			})
+		})
+		describe('Failure', () => {
+			it('prevents non-owners from finalizing', async () => {
+				await expect(crowdsale.connect(user1).finalize()).to.be.reverted
 			})
 		})
 	})
