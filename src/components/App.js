@@ -5,6 +5,7 @@ import {ethers} from 'ethers';
 import Navigation from './Navigation';
 import Progress from './Progress';
 import Info from './Info';
+import Buy from './Buy';
 
 import TOKEN_ABI from '../abis/Token.json';
 import CROWDSALE_ABI from '../abis/Crowdsale.json';
@@ -26,6 +27,7 @@ function App() {
 	
 	const loadBlockchainData = async () => {
 		const provider = new ethers.providers.Web3Provider(window.ethereum);
+		setProvider(provider)
 		const { chainId } = await provider.getNetwork()
 		const token = new ethers.Contract(config[chainId].token.address, TOKEN_ABI, provider)
 		const crowdsale = new ethers.Contract(config[chainId].crowdsale.address, CROWDSALE_ABI, provider)
@@ -64,6 +66,7 @@ function App() {
 			) : (
 				<>
 					<p className="text-center"><strong>Current Price:</strong> {price} ETH</p>
+					<Buy provider={provider} price={price} crowdsale={crowdsale} setIsLoading={setIsLoading}/>
 					<Progress tokensSold={tokensSold} maxTokens={maxTokens}/>
 				</>
 			)}

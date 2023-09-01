@@ -30,7 +30,7 @@ contract Crowdsale {
 		public
 		payable
 	{
-		require (msg.value >= (price * _amount), "Crowdsale buyer has insufficient balance to complete transfer...");
+		require (msg.value >= ((price / 1e18) * _amount), "Crowdsale buyer has insufficient balance to complete transfer...");
 		require (token.balanceOf(address(this)) >= _amount, "Crowdsale contract has insufficient balance to complete transfer...");
 		token.transfer(msg.sender, _amount);
 		tokensSold += _amount;
